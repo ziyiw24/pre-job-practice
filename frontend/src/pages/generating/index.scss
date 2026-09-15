@@ -1,0 +1,16 @@
+.generating-page { min-height: 100vh; padding: 140px 48px 60px; box-sizing: border-box; text-align: center; background: #f7f5ef; color: #17221c; }
+.loader { width: 150px; height: 150px; margin: 0 auto; border-radius: 50%; background: conic-gradient(#174f3a, #e2ece5, #d36a30, #174f3a); padding: 8px; animation: spin 2s linear infinite; }
+.loader-inner { width: 100%; height: 100%; box-sizing: border-box; border-radius: 50%; background: #f7f5ef; display: flex; align-items: center; justify-content: center; color: #174f3a; font-size: 42px; font-weight: 800; }
+.generating-title { display: block; margin-top: 52px; font-size: 38px; font-weight: 800; }
+.generating-desc { display: block; margin: 18px auto 0; max-width: 590px; color: #6d7971; font-size: 24px; line-height: 1.6; }
+.stage-list { margin: 70px auto 0; max-width: 520px; text-align: left; }
+.stage { display: flex; align-items: center; gap: 20px; margin: 27px 0; color: #a1aaa4; font-size: 25px; }
+.stage.active { color: #174f3a; font-weight: 650; }
+.stage-dot { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #d7ddd8; display: flex; align-items: center; justify-content: center; }
+.stage.active .stage-dot { color: white; border-color: #174f3a; background: #174f3a; }
+.error-actions { margin-top: 55px; }
+.primary-action, .secondary-action { height: 88px; border-radius: 18px; display: flex; justify-content: center; align-items: center; font-size: 26px; font-weight: 700; }
+.primary-action { background: #174f3a; color: white; }
+.secondary-action { margin-top: 16px; color: #174f3a; border: 2px solid #174f3a; }
+.bottom-note { position: fixed; left: 0; right: 0; bottom: 55px; color: #929a95; font-size: 21px; }
+@keyframes spin { to { transform: rotate(360deg); } }

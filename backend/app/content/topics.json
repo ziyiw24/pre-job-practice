@@ -1,0 +1,51 @@
+[
+  {
+    "id": "topic_strength_basics", "slug": "strength-basics", "title": "力量训练基础", "summary": "了解负荷、次数、组数与循序渐进的基本原则。", "category": "fitness", "difficulty": "easy", "review_status": "approved", "updated_at": "2026-09-11", "risk_level": "low", "icon": "🏋️",
+    "content": "力量训练通过肌肉对抗阻力来提升力量与功能。初学者应先学习稳定、可控的动作，再逐步增加负荷。同一肌群的高强度训练之间应留出恢复时间。训练中应保持自然呼吸，出现尖锐疼痛、胸痛、眩晕或异常气短时立即停止。",
+    "search_terms": ["增肌", "器械训练", "阻力训练", "力量"],
+    "sources": [{"title": "WHO guidelines on physical activity and sedentary behaviour", "publisher": "World Health Organization", "url": "https://www.who.int/publications/i/item/9789240015128"}]
+  },
+  {
+    "id": "topic_movement_safety", "slug": "movement-safety", "title": "动作安全与负荷", "summary": "识别正常用力感、疲劳与需要停止的危险信号。", "category": "safety", "difficulty": "easy", "review_status": "approved", "updated_at": "2026-09-11", "risk_level": "medium", "icon": "🛡️",
+    "content": "热身应逐步提高心率并演练即将进行的动作。增加负荷前应能稳定完成目标动作。轻微肌肉酸胀可能是训练后的常见反应，但尖锐疼痛、关节不稳、明显肿胀、昏厥或胸痛不应被当作正常训练反应。",
+    "sources": [{"title": "Physical Activity Basics", "publisher": "US Centers for Disease Control and Prevention", "url": "https://www.cdc.gov/physical-activity-basics/"}]
+  },
+  {
+    "id": "topic_recovery", "slug": "exercise-recovery", "title": "运动恢复入门", "summary": "从睡眠、营养、训练间隔理解恢复。", "category": "fitness", "difficulty": "easy", "review_status": "approved", "updated_at": "2026-09-11", "risk_level": "low", "icon": "🌙",
+    "content": "恢复是训练适应的一部分。规律睡眠、均衡饮食、充足饮水与合理安排高低强度日有助于恢复。疲劳持续、表现明显下降或疼痛加重时，应降低训练负荷并寻求专业评估。",
+    "sources": [{"title": "Physical activity", "publisher": "World Health Organization", "url": "https://www.who.int/news-room/fact-sheets/detail/physical-activity"}]
+  },
+  {
+    "id": "topic_nutrition", "slug": "basic-nutrition", "title": "基础营养常识", "summary": "认识均衡饮食、蛋白质、碳水化合物与补水。", "category": "fitness", "difficulty": "easy", "review_status": "approved", "updated_at": "2026-09-11", "risk_level": "low", "icon": "🥗",
+    "content": "健康饮食应包含多样化食物，以全谷物、蔬菜、水果、豆类和适量优质蛋白质为基础。不存在适用于所有人的极端减重速度或单一食谱。运动前后的饮水和食物安排应结合环境、时长与个人耐受情况。",
+    "sources": [{"title": "Healthy diet", "publisher": "World Health Organization", "url": "https://www.who.int/news-room/fact-sheets/detail/healthy-diet"}]
+  },
+  {
+    "id": "topic_tcm_basics", "slug": "tcm-basics", "title": "中医基础概念", "summary": "以知识学习视角理解整体观、阴阳与辨证概念。", "category": "tcm", "difficulty": "easy", "review_status": "approved", "updated_at": "2026-09-11", "risk_level": "medium", "icon": "🌿",
+    "content": "中医学以整体观念和辨证论治为重要特征。阴阳、五行、藏象、气血津液等是其理论体系中的概念。这些概念的学习不等于自我诊断，具体症状、用药和治疗应由具备资质的医疗专业人员评估。",
+    "sources": [{"title": "中医药健康文化素养", "publisher": "国家中医药管理局", "url": "https://www.natcm.gov.cn/"}]
+  },
+  {
+    "id": "topic_meridians", "slug": "meridian-literacy", "title": "经络与穴位常识", "summary": "了解经络和穴位的基础术语及安全边界。", "category": "tcm", "difficulty": "medium", "review_status": "approved", "updated_at": "2026-09-11", "risk_level": "medium", "icon": "📖",
+    "content": "经络和腧穴是中医学理论中用于描述人体联系与特定部位的概念。穴位定位和针刺操作需要专业训练。未经专业指导不应自行针刺，更不应在受伤、感染或重要解剖区域进行操作。",
+    "search_terms": ["经络", "穴位", "腧穴", "十二经脉"],
+    "sources": [{"title": "中医药文化科普资源", "publisher": "国家中医药管理局", "url": "https://www.natcm.gov.cn/"}]
+  },
+  {
+    "id": "topic_seasonal_wellness", "slug": "seasonal-wellness", "title": "四季养生常识", "summary": "用可执行的生活方式理解中医四时养生观。", "category": "tcm", "difficulty": "easy", "review_status": "approved", "updated_at": "2026-09-11", "risk_level": "low", "icon": "🍂",
+    "content": "四时养生强调生活节律与季节和环境相适应。面向普通人群的安全建议包括保持规律作息、均衡饮食、适量活动，并根据气温调整衣物和补水。养生不能替代对疾病的规范诊疗。",
+    "sources": [{"title": "中国公民中医养生保健素养", "publisher": "国家中医药管理局", "url": "https://www.natcm.gov.cn/"}]
+  },
+  {
+    "id": "topic_gallbladder_meridian", "slug": "gallbladder-meridian", "title": "足少阳胆经常识", "summary": "认识胆经的基本概念、循行概要与学习边界。", "category": "tcm", "difficulty": "medium", "review_status": "approved", "updated_at": "2026-09-14", "risk_level": "medium", "icon": "🌿",
+    "content": "足少阳胆经是中医十二经脉之一。按中医经络理论，其循行从眼外角附近开始，经头侧、耳后、颈肩及躯干侧面，再沿下肢外侧向下，到足第四趾外侧端。胆经相关知识属于中医理论学习，不能用来自我诊断。穴位精确定位、针刺和针灸治疗需要由受过训练的专业人员进行。",
+    "search_terms": ["胆经", "足少阳", "足少阳胆经", "经脉胆经"],
+    "sources": [{"title": "健康养生：足少阳胆经科普", "publisher": "国家中医药管理局", "url": "https://www.natcm.gov.cn/hudongjiaoliu/guanfangweixin/2019-03-29/9437.html"}]
+  },
+  {
+    "id": "topic_moxibustion", "slug": "moxibustion-literacy", "title": "艾灸基础与安全", "summary": "了解艾灸概念、专业操作边界和烫伤风险。", "category": "tcm", "difficulty": "easy", "review_status": "approved", "updated_at": "2026-09-14", "risk_level": "medium", "icon": "🔥",
+    "content": "艾灸是中医灸法的一类，使用艾绒或艾制品产生的热力作用于体表特定部位。艾灸存在烫伤、火灾、烟雾刺激和皮肤不良反应等风险，不是温度越高或时间越长越好。医疗性艾灸需由正规医疗机构的专业人员在评估后操作。若出现灼痛、水疱、持续红肿或呼吸不适，应停止并联系医护人员；明显不适时应前往正规医疗机构。",
+    "search_terms": ["艾灸", "灸法", "艾条", "灸疗"],
+    "sources": [{"title": "针灸科治疗后常见不适应急处理指南", "publisher": "北京市卫生健康委员会", "url": "https://wjw.beijing.gov.cn/jyt2023/jytjksh/202606/t20260609_4692490.html"}, {"title": "保健艾灸师国家职业标准（2024年版）", "publisher": "人力资源和社会保障部", "url": "https://www.mohrss.gov.cn/xxgk2020/fdzdgknr/rcrs_4225/jnrc/202406/W020240603624867965059.pdf"}]
+  }
+]
