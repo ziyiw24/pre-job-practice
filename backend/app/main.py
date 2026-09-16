@@ -7,7 +7,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.api.v1.routes import health, knowledge, platform, privacy, quiz, report, topics, training, training_documents, user
+from app.api.v1.routes import auth_session, health, knowledge, platform, privacy, quiz, report, topics, training, training_documents, user
 from app.core.config import get_settings, validate_production_settings
 from app.core.db import close_mysql_pool, connect_mysql, init_mysql
 from app.core.exceptions import (
@@ -96,6 +96,7 @@ async def enforce_request_size(request: Request, call_next):
 
 # 注册路由
 app.include_router(health.router, prefix="/api/v1")
+app.include_router(auth_session.router, prefix="/api/v1")
 app.include_router(quiz.router, prefix="/api/v1")
 app.include_router(report.router, prefix="/api/v1")
 app.include_router(user.router, prefix="/api/v1")

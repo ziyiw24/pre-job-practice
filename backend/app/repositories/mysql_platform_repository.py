@@ -1,6 +1,6 @@
 """M4 MySQL 持久化适配器，所有资源查询同时约束 store/user。"""
 from __future__ import annotations
-import json, uuid
+import hashlib, json, secrets, uuid
 from app.core.db import get_mysql_pool
 
 class MySQLPlatformRepository:
@@ -17,8 +17,54 @@ class MySQLPlatformRepository:
                     await cur.execute("INSERT INTO store_members(store_id,user_id,role) VALUES(%s,%s,'owner')",(sid,user_id))
                 await conn.commit(); return {"id":str(sid),"name":name}
             except Exception:await conn.rollback();raise
+    async def memberships(self,user_id):
+        async with self._pool().acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute("SELECT s.id,s.name,sm.role FROM store_members sm JOIN stores s ON s.id=sm.store_id WHERE sm.user_id=%s AND sm.status='active' ORDER BY sm.id",(user_id,));rows=await cur.fetchall()
+        return [{"store_id":str(x[0]),"store_name":x[1],"role":x[2]} for x in rows]
+    async def dashboard(self,store_id,user_id):
+        async with self._pool().acquire() as conn:
+            async with conn.cursor() as cur:
+                await self._role(cur,store_id,user_id,{"owner","manager"})
+                await cur.execute("SELECT COUNT(*),SUM(status!='published'),SUM(status='published') FROM training_courses WHERE store_id=%s",(store_id,));c=await cur.fetchone()
+                await cur.execute("SELECT SUM(status!='completed'),SUM(status='completed') FROM training_assignments WHERE store_id=%s",(store_id,));a=await cur.fetchone()
+        return {"course_count":c[0] or 0,"draft_count":c[1] or 0,"published_count":c[2] or 0,"pending_assignments":a[0] or 0,"completed_assignments":a[1] or 0}
+    async def list_courses(self,store_id,user_id):
+        async with self._pool().acquire() as conn:
+            async with conn.cursor() as cur:
+                await self._role(cur,store_id,user_id,{"owner","manager"});await cur.execute("SELECT tc.id,tc.title,tc.status,COUNT(tq.id) FROM training_courses tc LEFT JOIN training_questions tq ON tq.course_id=tc.id WHERE tc.store_id=%s GROUP BY tc.id ORDER BY tc.updated_at DESC",(store_id,));rows=await cur.fetchall()
+        return [{"id":str(x[0]),"title":x[1],"status":x[2],"question_count":x[3]} for x in rows]
+    async def list_members(self,store_id,user_id):
+        async with self._pool().acquire() as conn:
+            async with conn.cursor() as cur:
+                await self._role(cur,store_id,user_id,{"owner","manager"});await cur.execute("SELECT u.id,u.nickname,sm.role FROM store_members sm JOIN users u ON u.id=sm.user_id WHERE sm.store_id=%s AND sm.status='active' ORDER BY sm.id",(store_id,));rows=await cur.fetchall()
+        return [{"user_id":x[0],"nickname":x[1],"role":x[2]} for x in rows]
+    async def list_employee_assignments(self,user_id,status=None):
+        sql="SELECT ta.id,ta.store_id,ta.course_id,tc.title,ta.status,aa.score FROM training_assignments ta JOIN training_courses tc ON tc.id=ta.course_id LEFT JOIN answer_attempts aa ON aa.assignment_id=ta.id AND aa.status='completed' WHERE ta.employee_user_id=%s";params=[user_id]
+        if status:sql+=" AND ta.status=%s";params.append(status)
+        sql+=" ORDER BY ta.id DESC"
+        async with self._pool().acquire() as conn:
+            async with conn.cursor() as cur:await cur.execute(sql,tuple(params));rows=await cur.fetchall()
+        return [{"id":str(x[0]),"store_id":str(x[1]),"course_id":str(x[2]),"title":x[3],"status":x[4],"score":x[5]} for x in rows]
+    async def create_invite(self,store_id,user_id,role,max_uses,expires_hours):
+        code=secrets.token_hex(4).upper();digest=hashlib.sha256(code.encode()).hexdigest()
+        async with self._pool().acquire() as conn:
+            async with conn.cursor() as cur:
+                await self._role(cur,store_id,user_id,{"owner","manager"});await cur.execute("INSERT INTO store_invites(store_id,invite_code_hash,role,expires_at,max_uses,created_by) VALUES(%s,%s,%s,DATE_ADD(NOW(),INTERVAL %s HOUR),%s,%s)",(store_id,digest,role,expires_hours,max_uses,user_id))
+        return {"invite_code":code,"role":role,"expires_hours":expires_hours}
+    async def join_invite(self,user_id,invite_code):
+        digest=hashlib.sha256(invite_code.upper().encode()).hexdigest()
+        async with self._pool().acquire() as conn:
+            await conn.begin()
+            try:
+                async with conn.cursor() as cur:
+                    await cur.execute("SELECT id,store_id,role,max_uses,used_count FROM store_invites WHERE invite_code_hash=%s AND expires_at>NOW() FOR UPDATE",(digest,));row=await cur.fetchone()
+                    if not row or row[4]>=row[3]:raise ValueError("INVITE_INVALID")
+                    await cur.execute("INSERT INTO store_members(store_id,user_id,role,status) VALUES(%s,%s,%s,'active') ON DUPLICATE KEY UPDATE role=VALUES(role),status='active'",(row[1],user_id,row[2]));await cur.execute("UPDATE store_invites SET used_count=used_count+1 WHERE id=%s",(row[0],));await cur.execute("SELECT name FROM stores WHERE id=%s",(row[1],));name=(await cur.fetchone())[0]
+                await conn.commit();return {"store_id":str(row[1]),"store_name":name,"role":row[2]}
+            except Exception:await conn.rollback();raise
     async def _role(self,cur,store_id,user_id,allowed):
-        await cur.execute("SELECT role FROM store_members WHERE store_id=%s AND user_id=%s",(store_id,user_id)); row=await cur.fetchone()
+        await cur.execute("SELECT role FROM store_members WHERE store_id=%s AND user_id=%s AND status='active'",(store_id,user_id)); row=await cur.fetchone()
         if not row or row[0] not in allowed:raise PermissionError("FORBIDDEN")
     async def add_member(self,store_id,actor,user_id,role):
         async with self._pool().acquire() as conn:
@@ -82,7 +128,7 @@ class MySQLPlatformRepository:
                     for item in answers:
                         q=next((x for x in qs if x[1]==item.question_id),None)
                         if q:await cur.execute("INSERT INTO training_answer_records(attempt_id,question_id,selected_json,is_correct,duration_ms) VALUES(%s,%s,%s,%s,%s)",(attempt,q[0],json.dumps(item.selected_answers),results[q[1]],item.duration_ms))
-                    report={"score":score,"correct_count":sum(results.values()),"total_count":len(qs),"answer_results":results,"questions":[{"id":q[1],"answer":json.loads(q[2]),"explanation":q[3],"evidence":json.loads(q[4])} for q in qs],"certification_notice":"本结果仅用于在线学习，不等同于实操上岗认证。"}; await cur.execute("INSERT INTO training_reports(attempt_id,store_id,report_json) VALUES(%s,%s,%s)",(attempt,a[0],json.dumps(report,ensure_ascii=False))); await cur.execute("UPDATE training_assignments SET status='completed' WHERE id=%s",(assignment_id,))
+                    report={"score":score,"correct_count":sum(results.values()),"total_count":len(qs),"answer_results":results,"questions":[{"id":q[1],"answer":json.loads(q[2]),"explanation":q[3],"evidence":json.loads(q[4])} for q in qs],"certification_notice":"本结果仅用于在线学习，不等同于实操上岗认证。"}; await cur.execute("INSERT INTO training_reports(attempt_id,store_id,report_json) VALUES(%s,%s,%s)",(attempt,a[0],json.dumps(report,ensure_ascii=False))); await cur.execute("UPDATE training_assignments SET status='completed',completed_at=NOW() WHERE id=%s",(assignment_id,))
                 await conn.commit();return report
             except Exception:await conn.rollback();raise
     async def report(self,assignment_id,user_id):

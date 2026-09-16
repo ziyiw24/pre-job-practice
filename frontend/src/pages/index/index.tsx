@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Input, Text, Textarea, View } from '@tarojs/components'
-import Taro from '@tarojs/taro'
-import { createTrainingTask, getTrainingDemo } from '../../services/api'
+import Taro, { useRouter } from '@tarojs/taro'
+import { clearAuthContext, createTrainingTask, devLogin, ensureWechatLogin, getAuthSession, getToken, getTrainingDemo, syncAuthContext } from '../../services/api'
 import { createClientRequestId, loadTrainingDraft, saveTrainingDraft } from '../../services/trainingStorage'
 import './index.scss'
 
@@ -10,7 +10,8 @@ const MAX_LENGTH = 8000
 const ROLE_KEY = 'training:entry-role'
 
 export default function IndexPage() {
-  const [role, setRole] = useState<'manager' | 'employee' | ''>(() => Taro.getStorageSync(ROLE_KEY) || '')
+  const createMode=useRouter().params.create==='1'
+  const [role, setRole] = useState<'manager' | 'employee' | ''>('')
   const cached = loadTrainingDraft()
   const [title, setTitle] = useState(cached?.title || '')
   const [content, setContent] = useState(cached?.content || '')
@@ -21,14 +22,23 @@ export default function IndexPage() {
     const timer = setTimeout(() => saveTrainingDraft({ title, content, questionCount }), 300)
     return () => clearTimeout(timer)
   }, [title, content, questionCount])
+  useEffect(()=>{
+    if(createMode||!getToken()||!Taro.getStorageSync(ROLE_KEY))return
+    syncAuthContext().then(next=>{
+      if(!next.membership){clearAuthContext();return}
+      setRole(next.role);Taro.switchTab({url:'/pages/main/home/index'})
+    }).catch(()=>clearAuthContext())
+  },[createMode])
 
-  useEffect(() => {
-    if (role === 'employee') Taro.reLaunch({ url: '/pages/assignment/index' })
-  }, [role])
-
-  const chooseRole = (value: 'manager' | 'employee') => {
-    Taro.setStorageSync(ROLE_KEY, value)
-    setRole(value)
+  const chooseRole = async (value: 'manager' | 'employee') => {
+    try {
+      let membership
+      if (Taro.getEnv() === Taro.ENV_TYPE.WEB) membership=(await devLogin(value)).membership
+      else { await ensureWechatLogin(); membership=(await getAuthSession()).memberships.find(x=>value==='manager'?x.role!=='employee':x.role==='employee') }
+      if (!membership) return Taro.navigateTo({url:`/pages/onboarding/index?role=${value}`})
+      Taro.setStorageSync(ROLE_KEY, value);Taro.setStorageSync('training:membership',membership);Taro.setStorageSync('training:store-id',membership.store_id);setRole(value)
+      Taro.switchTab({url:'/pages/main/home/index'})
+    } catch(error:any){Taro.showToast({title:error.message||'登录失败',icon:'none'})}
   }
 
   const pasteDemo = async () => {

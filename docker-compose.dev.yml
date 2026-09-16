@@ -1,0 +1,26 @@
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: local-dev-password
+      MYSQL_DATABASE: zhiheng_health
+    ports: ["3306:3306"]
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/sql/init_mysql.sql:/docker-entrypoint-initdb.d/001_init.sql:ro
+      - ./backend/sql/migrations/002_training_platform.sql:/docker-entrypoint-initdb.d/002_training_platform.sql:ro
+      - ./backend/sql/migrations/003_auth_navigation.sql:/docker-entrypoint-initdb.d/003_auth_navigation.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-plocal-dev-password"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  redis:
+    image: redis:7.4-alpine
+    ports: ["6379:6379"]
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes: ["redis_data:/data"]
+volumes:
+  mysql_data:
+  redis_data:

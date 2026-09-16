@@ -29,6 +29,14 @@
 
 ## 本地运行
 
+需要验证真实数据库和鉴权时，先启动 MySQL 与 Redis：
+
+```bash
+docker compose -f docker-compose.dev.yml up -d
+```
+
+随后在 `backend/.env` 设置 `PLATFORM_STORE=mysql`、`MYSQL_CONNECT_ON_START=true`；纯界面演示可继续使用默认内存适配器。H5 会使用仅限非生产环境的模拟登录，微信小程序使用 `wx.login`。
+
 ```bash
 cd backend
 python3.11 -m venv .venv && source .venv/bin/activate

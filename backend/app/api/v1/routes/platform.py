@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from app.core.auth import get_current_user
 from app.models.common import ApiResponse
-from app.models.platform import AssignmentCreate, AssignmentSubmit, CourseCreate, MemberCreate, StoreCreate
+from app.models.platform import AssignmentCreate, AssignmentSubmit, CourseCreate, InviteCreate, InviteJoin, MemberCreate, StoreCreate
 from app.services import platform_service as svc
 from app.core.config import get_settings
 from app.repositories.mysql_platform_repository import mysql_platform_repository
@@ -33,3 +33,15 @@ async def answers(assignment_id:str,req:AssignmentSubmit,user_id:int=Depends(get
 async def assignment_report(assignment_id:str,user_id:int=Depends(get_current_user)):return await call("report",assignment_id,user_id)
 @router.get("/stores/{store_id}/results")
 async def store_results(store_id:str,user_id:int=Depends(get_current_user)):return await call("store_results",store_id,user_id)
+@router.get("/stores/{store_id}/dashboard")
+async def store_dashboard(store_id:str,user_id:int=Depends(get_current_user)):return await call("dashboard",store_id,user_id)
+@router.get("/stores/{store_id}/courses")
+async def store_courses(store_id:str,user_id:int=Depends(get_current_user)):return await call("list_courses",store_id,user_id)
+@router.get("/stores/{store_id}/members")
+async def store_members(store_id:str,user_id:int=Depends(get_current_user)):return await call("list_members",store_id,user_id)
+@router.get("/employee/assignments")
+async def employee_assignments(status:str|None=None,user_id:int=Depends(get_current_user)):return await call("list_employee_assignments",user_id,status)
+@router.post("/stores/{store_id}/invites")
+async def create_store_invite(store_id:str,req:InviteCreate,user_id:int=Depends(get_current_user)):return await call("create_invite",store_id,user_id,req.role,req.max_uses,req.expires_hours)
+@router.post("/stores/join")
+async def join_store(req:InviteJoin,user_id:int=Depends(get_current_user)):return await call("join_invite",user_id,req.invite_code)

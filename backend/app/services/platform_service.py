@@ -1,8 +1,46 @@
 """M4 用例层。内存实现用于演示/测试，生产表结构见 migrations/002。"""
-import uuid
+import secrets, uuid
 from app.models.platform import CourseCreate
 
-stores: dict[str, dict] = {}; courses: dict[str, dict] = {}; assignments: dict[str, dict] = {}
+stores: dict[str, dict] = {}; courses: dict[str, dict] = {}; assignments: dict[str, dict] = {}; invites: dict[str,dict] = {}
+
+def ensure_demo_membership(user_id: int, role: str):
+    store=stores.setdefault("store_demo",{"id":"store_demo","name":"上岗练演示门店","members":{}})
+    store["members"][user_id]=role
+    store["members"].setdefault(9001,"manager");store["members"].setdefault(9002,"employee")
+    courses.setdefault("course_demo",{"id":"course_demo","store_id":"store_demo","title":"原料时效与异常处理","status":"published","confirmed_question_ids":[],"questions":[{"id":"q1","type":"single","scenario":"发现一盒未标记的已开封原料。","stem":"正确处理方式是什么？","options":[{"key":"A","text":"继续使用"},{"key":"B","text":"隔离并报告负责人"}],"answer":["B"],"explanation":"未标记原料不得继续使用。","knowledge_point":"原料标签","evidence":{"quote":"未标记或标记不清的原料不得继续使用"},"risk_tags":["safety"],"requires_confirmation":True}]})
+    assignments.setdefault("assignment_demo",{"id":"assignment_demo","store_id":"store_demo","course_id":"course_demo","employee_user_id":9002,"status":"pending","report":None})
+    return store
+
+def memberships(user_id: int):
+    return [{"store_id":s["id"],"store_name":s["name"],"role":role} for s in stores.values() if (role:=s["members"].get(user_id))]
+
+def dashboard(store_id: str,user_id: int):
+    require_role(store_id,user_id,{"owner","manager"})
+    scoped_courses=[c for c in courses.values() if c["store_id"]==store_id]
+    scoped_assignments=[a for a in assignments.values() if a["store_id"]==store_id]
+    return {"course_count":len(scoped_courses),"draft_count":sum(c["status"]!="published" for c in scoped_courses),"published_count":sum(c["status"]=="published" for c in scoped_courses),"pending_assignments":sum(a["status"]!="completed" for a in scoped_assignments),"completed_assignments":sum(a["status"]=="completed" for a in scoped_assignments)}
+
+def list_courses(store_id: str,user_id: int):
+    require_role(store_id,user_id,{"owner","manager"})
+    return [{"id":c["id"],"title":c["title"],"status":c["status"],"question_count":len(c["questions"])} for c in courses.values() if c["store_id"]==store_id]
+
+def list_members(store_id: str,user_id: int):
+    store=require_role(store_id,user_id,{"owner","manager"})
+    return [{"user_id":uid,"role":role,"nickname":f"用户 {uid}"} for uid,role in store["members"].items()]
+
+def list_employee_assignments(user_id: int,status: str|None=None):
+    rows=[a for a in assignments.values() if a["employee_user_id"]==user_id and (not status or a["status"]==status)]
+    return [{"id":a["id"],"store_id":a["store_id"],"course_id":a["course_id"],"title":courses[a["course_id"]]["title"],"status":a["status"],"score":a["report"]["score"] if a["report"] else None} for a in rows]
+
+def create_invite(store_id:str,user_id:int,role:str,max_uses:int,expires_hours:int):
+    require_role(store_id,user_id,{"owner","manager"});code=secrets.token_hex(4).upper();invites[code]={"store_id":store_id,"role":role,"max_uses":max_uses,"used_count":0};return {"invite_code":code,"role":role,"expires_hours":expires_hours}
+
+def join_invite(user_id:int,invite_code:str):
+    invite=invites.get(invite_code.upper())
+    if not invite or invite["used_count"]>=invite["max_uses"]:raise ValueError("INVITE_INVALID")
+    stores[invite["store_id"]]["members"][user_id]=invite["role"];invite["used_count"]+=1
+    store=stores[invite["store_id"]];return {"store_id":store["id"],"store_name":store["name"],"role":invite["role"]}
 
 def create_store(user_id: int, name: str):
     sid=f"store_{uuid.uuid4().hex[:10]}"; stores[sid]={"id":sid,"name":name,"members":{user_id:"owner"}}; return stores[sid]

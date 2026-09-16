@@ -40,6 +40,13 @@ export function clearToken() {
   Taro.removeStorageSync(USER_KEY)
 }
 
+export function clearAuthContext() {
+  clearToken()
+  Taro.removeStorageSync('training:entry-role')
+  Taro.removeStorageSync('training:membership')
+  Taro.removeStorageSync('training:store-id')
+}
+
 /** 获取本地缓存的用户信息 */
 export function getCachedUser(): UserBrief | null {
   const raw = Taro.getStorageSync(USER_KEY)
@@ -258,6 +265,24 @@ export async function ensureWechatLogin() {
   return result.user
 }
 
+export type Membership = { store_id: string; store_name: string; role: 'owner'|'manager'|'employee' }
+export type AuthSession = { user_id: number; memberships: Membership[]; active_membership: Membership|null }
+export async function devLogin(role:'manager'|'employee') {
+  const result=await request<{token:string;user:UserBrief;membership:Membership}>('/auth/dev-login',{method:'POST',data:{role}})
+  setToken(result.token);setCachedUser(result.user);Taro.setStorageSync('training:membership',result.membership);return result
+}
+export function getAuthSession(){return request<AuthSession>('/auth/session')}
+export async function syncAuthContext(){
+  const session=await getAuthSession()
+  const membership=session.active_membership
+  if(!membership)return {role:'employee' as const,membership:null as Membership|null}
+  const role: 'manager'|'employee'=membership.role==='employee'?'employee':'manager'
+  Taro.setStorageSync('training:entry-role',role)
+  Taro.setStorageSync('training:membership',membership)
+  Taro.setStorageSync('training:store-id',membership.store_id)
+  return {role,membership}
+}
+
 export function createStore(name: string) { return request<{ id: string; name: string }>('/stores', { method: 'POST', data: { name } }) }
 export function addStoreMember(storeId: string, userId: number, role: 'manager' | 'employee') { return request(`/stores/${storeId}/members`, { method: 'POST', data: { user_id: userId, role } }) }
 export function createStoreCourse(storeId: string, title: string, questions: TrainingQuestion[], confirmedQuestionIds: string[]) { return request<{ id: string; status: string }>(`/stores/${storeId}/courses`, { method: 'POST', data: { title, questions, confirmed_question_ids: confirmedQuestionIds } }) }
@@ -270,6 +295,16 @@ export interface AssignmentReport { score: number; correct_count: number; total_
 export function createPrivacyRequest(requestType:'complaint'|'delete_account'|'delete_document',detail:string,resourceId?:string){return request<{request_id:string;status:string}>('/privacy/requests',{method:'POST',data:{request_type:requestType,detail,resource_id:resourceId}})}
 export interface StoreResult { assignment_id:string; employee_user_id:number; course_id:string; status:string; score:number|null }
 export function getStoreResults(storeId:string){return request<StoreResult[]>(`/stores/${storeId}/results`)}
+export type StoreDashboard={course_count:number;draft_count:number;published_count:number;pending_assignments:number;completed_assignments:number}
+export type CourseSummary={id:string;title:string;status:string;question_count:number}
+export type MemberSummary={user_id:number;nickname:string;role:string}
+export type AssignmentSummary={id:string;store_id:string;course_id:string;title:string;status:string;score:number|null}
+export function getStoreDashboard(storeId:string){return request<StoreDashboard>(`/stores/${storeId}/dashboard`)}
+export function getStoreCourses(storeId:string){return request<CourseSummary[]>(`/stores/${storeId}/courses`)}
+export function getStoreMembers(storeId:string){return request<MemberSummary[]>(`/stores/${storeId}/members`)}
+export function getEmployeeAssignments(status?:string){return request<AssignmentSummary[]>(`/employee/assignments${status?`?status=${status}`:''}`)}
+export function createStoreInvite(storeId:string){return request<{invite_code:string;role:string;expires_hours:number}>(`/stores/${storeId}/invites`,{method:'POST',data:{role:'employee',max_uses:20,expires_hours:168}})}
+export function joinStore(inviteCode:string){return request<Membership>('/stores/join',{method:'POST',data:{invite_code:inviteCode}})}
 
 /** 获取用户资料（含统计） */
 export function getUserProfile() {

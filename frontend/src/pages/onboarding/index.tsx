@@ -1,0 +1,7 @@
+import { useState } from 'react'
+import { Input, Text, View } from '@tarojs/components'
+import Taro,{useRouter} from '@tarojs/taro'
+import { createStore, joinStore } from '../../services/api'
+import './index.scss'
+
+export default function OnboardingPage(){const role=useRouter().params.role||'employee';const[value,setValue]=useState('');const submit=async()=>{try{if(!value.trim())throw new Error(role==='manager'?'请输入门店名称':'请输入邀请码');let membership;if(role==='manager'){const store=await createStore(value.trim());membership={store_id:store.id,store_name:store.name,role:'owner'}}else membership=await joinStore(value.trim());Taro.setStorageSync('training:entry-role',role);Taro.setStorageSync('training:membership',membership);Taro.setStorageSync('training:store-id',membership.store_id);Taro.switchTab({url:'/pages/main/home/index'})}catch(e:any){Taro.showToast({title:e.message||'操作失败',icon:'none'})}};return <View className='onboarding'><Text className='kicker'>{role==='manager'?'店长初始化':'员工加入门店'}</Text><Text className='title'>{role==='manager'?'创建你的门店':'输入门店邀请码'}</Text><Text className='desc'>{role==='manager'?'创建后你将成为门店所有者，可以邀请店长和员工。':'邀请码由店长在“门店”页生成。'}</Text><View className='card'><Input value={value} onInput={e=>setValue(e.detail.value)} placeholder={role==='manager'?'例如：春风路店':'输入 8 位邀请码'}/><View className='button' onClick={submit}><Text>{role==='manager'?'创建并进入':'加入并开始学习'}</Text></View><Text className='hint'>身份与权限将由服务器保存</Text></View></View>}

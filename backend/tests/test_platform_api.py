@@ -20,3 +20,8 @@ def test_employee_cannot_receive_answer_and_server_scores():
         results=c.get(f"/api/v1/stores/{store['id']}/results",headers=headers(1)).json()["data"]
         assert results[0]["score"]==100
         assert c.get(f"/api/v1/stores/{store['id']}/results",headers=headers(3)).json()["code"]==4030
+        assert c.get(f"/api/v1/stores/{store['id']}/dashboard",headers=headers(1)).json()["data"]["course_count"]==1
+        assert c.get(f"/api/v1/stores/{store['id']}/courses",headers=headers(1)).json()["data"][0]["title"]=="岗位课"
+        assert c.get(f"/api/v1/stores/{store['id']}/members",headers=headers(3)).json()["code"]==4030
+        completed=c.get("/api/v1/employee/assignments?status=completed",headers=headers(2)).json()["data"]
+        assert completed[0]["score"]==100
