@@ -9,6 +9,7 @@
     "css": "sass"
   },
   "scripts": {
+    "test:navigation": "node --test tests/navigation.test.mjs",
     "build:weapp": "taro build --type weapp",
     "build:h5": "taro build --type h5",
     "dev:weapp": "npm run build:weapp -- --watch",

@@ -13,6 +13,7 @@ export default defineAppConfig({
     'pages/main/content/index',
     'pages/main/mine/index',
     'pages/onboarding/index',
+    'pages/course/create/index',
   ],
   tabBar: {
     color: '#7b857f', selectedColor: '#174f3a', backgroundColor: '#ffffff', borderStyle: 'white',
